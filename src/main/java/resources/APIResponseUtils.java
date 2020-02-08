@@ -16,13 +16,7 @@ public class APIResponseUtils {
         return builder;
     }
 
-    public static ResponseBuilder serverError(Exception e) {
-        String errorMessage;
-        if (e.getMessage() != null) {
-            errorMessage = e.getMessage();
-        } else {
-            errorMessage = "There was an error in the server while processing the request";
-        }
+    public static ResponseBuilder serverError(String errorMessage) {
         APIError apiError = new APIError(Response.Status.INTERNAL_SERVER_ERROR, "Internal Server Error", errorMessage);
         Response.ResponseBuilder builder = Response.status(Response.Status.INTERNAL_SERVER_ERROR)
                 .entity(apiError)

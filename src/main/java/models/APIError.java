@@ -3,8 +3,6 @@ package models;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import javax.ws.rs.core.Response;
-import java.util.Arrays;
-import java.util.List;
 
 public class APIError {
 
@@ -13,9 +11,9 @@ public class APIError {
     @JsonProperty
     private String message;
     @JsonProperty
-    private List<String> errors;
+    private String errors;
 
-    public APIError(Response.Status status, String message, List<String> errors) {
+    public APIError(Response.Status status, String message, String errors) {
         super();
         this.status = status;
         this.message = message;
@@ -23,11 +21,4 @@ public class APIError {
     }
 
     public APIError(){};
-
-    public APIError(Response.Status status, String message, String error) {
-        super();
-        this.status = status;
-        this.message = message;
-        errors = Arrays.asList(error);
-    }
 }

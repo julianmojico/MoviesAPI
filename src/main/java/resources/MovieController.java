@@ -10,7 +10,6 @@ import javax.inject.Singleton;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -56,20 +55,18 @@ public class MovieController {
     @Timed
     public Response getMovies(MovieAPIRequest request) {
 
-        //404,500,405
-        if (request == null || request.isNullRequest()) {
-            return  APIResponseUtils.badRequest().build();
-        } else {
-            Optional<List<Movie>> optional;
-            try {
-                optional = movieService.fetchMovies(request);
-                if (optional.isPresent()) {
-                    return APIResponseUtils.okWithContent(optional.get()).build();
-                } else return APIResponseUtils.notFound().build();
-            } catch (Exception e) {
-                return APIResponseUtils.serverError(e).build();
+        Response.ResponseBuilder response;
+        try {
+            response = movieService.fetchMovies(request);
+            return response.build();
+        } catch (Exception e) {
+            String errorMessage;
+            if (e.getMessage() != null) {
+                errorMessage = e.getMessage();
+            } else {
+                errorMessage = "There was an error in the server while processing the request";
             }
+            return APIResponseUtils.serverError(errorMessage).build();
         }
     }
-
 }

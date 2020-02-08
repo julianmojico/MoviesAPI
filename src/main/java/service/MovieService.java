@@ -3,10 +3,10 @@ package service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import models.APIError;
 import models.Movie;
 import models.MovieAPIRequest;
 import org.ehcache.core.Ehcache;
+import resources.APIResponseUtils;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -69,34 +69,47 @@ public class MovieService {
         return data;
     }
 
-    public Optional<List<Movie>> fetchMovies(MovieAPIRequest request) {
+    public Response.ResponseBuilder fetchMovies(MovieAPIRequest request) {
+
         boolean retrieveList = true;
+        Response.ResponseBuilder responseBuilder = null;
 
-        try {
-            URI uri = buildQueryFilters(request, retrieveList);
-            WebTarget webTarget = client.target(uri);
-            Response response = webTarget.request(MediaType.APPLICATION_JSON).get();
+        if (!request.isNullRequest()) {
 
-            if (response.getStatus() == Response.Status.OK.getStatusCode() && response.hasEntity()) {
+            //Perform public API call
+            Response response = callPublicAPI(request, retrieveList);
+            responseBuilder = buildResponse(responseBuilder, response);
 
-                JsonNode json = response.readEntity(JsonNode.class);
-                if (json.has("Error")){
-                    APIError apiError = new APIError(Response.Status.BAD_REQUEST, "Request resulted in an unexpected response", json.get("Error").asText());
-                    return apiError;
-                } else {
-                    String jsonString = json.toString();
-                    List<Movie> movies = fromJSON(new TypeReference<List<Movie>>() {
-                    }, jsonString);
-                    return Optional.of(movies);
-                }
-            } else {
-                return Optional.empty();
-            }
-        } catch (Exception e) {
-            //logger
-            e.printStackTrace();
-            throw e;
+        } else {
+            responseBuilder = APIResponseUtils.badRequest();
         }
+        return responseBuilder;
+
+    }
+
+    private Response callPublicAPI(MovieAPIRequest request, boolean retrieveList) {
+        URI uri = buildQueryFilters(request, retrieveList);
+        WebTarget webTarget = client.target(uri);
+        return webTarget.request(MediaType.APPLICATION_JSON).get();
+    }
+
+    private Response.ResponseBuilder buildResponse(Response.ResponseBuilder responseBuilder, Response response) {
+        if (response.hasEntity()) {
+            JsonNode json = response.readEntity(JsonNode.class);
+            if (json.has("Error")) {
+                //Wrap error message given by public API in our response
+                responseBuilder = APIResponseUtils.serverError(json.get("Error").asText());
+            } else {
+                String jsonString = json.toString();
+                List<Movie> movies = fromJSON(new TypeReference<List<Movie>>() {
+                }, jsonString);
+                responseBuilder = APIResponseUtils.okWithContent(movies);
+            }
+        }
+        if (!response.hasEntity() && (response.getStatus() == Response.Status.OK.getStatusCode())) {
+            responseBuilder = APIResponseUtils.okWithContent("{}");
+        }
+        return responseBuilder;
     }
 
     private URI buildQueryFilters(MovieAPIRequest movieAPIRequest, boolean isList) {
