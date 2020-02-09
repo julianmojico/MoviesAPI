@@ -11,6 +11,10 @@ import service.MovieService;
 import javax.ws.rs.client.Client;
 
 public class APIApplication extends Application<MoviesAPIConfiguration> {
+
+    private final String apiKey = System.getProperty("apiKey");
+    private final String baseUrl = System.getProperty("baseUrl");
+
     public static void main(String[] args) throws Exception {
         new APIApplication().run(args);
     }
@@ -27,19 +31,24 @@ public class APIApplication extends Application<MoviesAPIConfiguration> {
 
     @Override
     public void run(MoviesAPIConfiguration moviesAPIConfiguration, Environment environment) {
-        //JerseyClient initialization
-        final Client client = new JerseyClientBuilder(environment).using(new JerseyClientConfiguration())
-                .build(getName());
 
-        //Service instantiation
-        MovieService movieService = new MovieService(client);
+        if (!(baseUrl == null || apiKey == null)) {
+            //JerseyClient initialization
+            final Client client = new JerseyClientBuilder(environment).using(new JerseyClientConfiguration())
+                    .build(getName());
 
-        //Service injection
-        environment.jersey().register(new MovieController(movieService));
+            //Service instantiation
+            MovieService movieService = new MovieService(apiKey,baseUrl);
 
-        final TemplateHealthCheck healthCheck =
-                new TemplateHealthCheck(moviesAPIConfiguration.getAppName());
-        environment.healthChecks().register("appHealthcheck", healthCheck);
+            //Service injection
+            environment.jersey().register(new MovieController(movieService));
+
+            final TemplateHealthCheck healthCheck =
+                    new TemplateHealthCheck(moviesAPIConfiguration.getAppName());
+            environment.healthChecks().register("appHealthcheck", healthCheck);
+        } else {
+            throw new RuntimeException("baseApiUrl and apiKey are required parameters needed by the JVM");
+        }
+
     }
-
 }

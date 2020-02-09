@@ -15,7 +15,7 @@ public class MovieAPIRequest {
     private String movieTitle;
     private FilterType filterType;
     private String year;
-    private int page;
+    private int page = 1;
     private boolean isValidRequest = false;
 
     public MovieAPIRequest() {

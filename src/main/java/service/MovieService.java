@@ -1,13 +1,16 @@
 package service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import models.Movie;
 import models.MovieAPIRequest;
 import org.ehcache.core.Ehcache;
 import resources.APIResponseUtils;
 
+import javax.inject.Singleton;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
@@ -15,61 +18,26 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
-
+@Singleton
 public class MovieService {
 
-    private final String apiKey = System.getProperty("apiKey");
-    private final String baseUrl = System.getProperty("baseUrl");
+    private String apiKey;
+    private String baseUrl;
     private Client client;
     private Ehcache<MovieAPIRequest, Movie> cache;
 
 
-    public MovieService(Client client) {
+    public MovieService(String apiKey, String baseUrl) {
+        this.apiKey = apiKey;
+        this.baseUrl = baseUrl;
         this.client = ClientBuilder.newClient();
         //todo: add cache service attribute
     }
 
-    public Optional<Movie> fetchMovie(MovieAPIRequest request) {
-
-        boolean retrieveList = false;
-        Optional<Movie> output;
-
-        URI uri = buildQueryFilters(request, retrieveList);
-        WebTarget webTarget = client.target(uri);
-        Response response = null;
-
-        try {
-            response = webTarget.request(MediaType.APPLICATION_JSON).get();
-        } catch (Exception e) {
-            throw e;
-        }
-        if (response != null && response.getStatus() == Response.Status.OK.getStatusCode() && response.hasEntity()) {
-
-            Movie movie = response.readEntity(Movie.class);
-            output = Optional.of(movie);
-
-        } else {
-            output = Optional.empty();
-        }
-
-        return output;
-
-    }
-
-    private static <T> T fromJSON(final TypeReference<T> type, final String json) {
-        T data = null;
-        try {
-            data = new ObjectMapper().readValue(json, type);
-        } catch (Exception e) {
-            // Handle the problem
-        }
-        return data;
-    }
-
-    public Response.ResponseBuilder fetchMovies(MovieAPIRequest request) {
+    public Response.ResponseBuilder fetchMovies(MovieAPIRequest request) throws Exception {
 
         boolean retrieveList = true;
         Response.ResponseBuilder responseBuilder = null;
@@ -78,7 +46,8 @@ public class MovieService {
 
             //Perform public API call
             Response response = callPublicAPI(request, retrieveList);
-            responseBuilder = buildResponse(responseBuilder, response);
+            List<Movie> a = new ArrayList<>();
+            responseBuilder = buildResponse(response, a);
 
         } else {
             responseBuilder = APIResponseUtils.badRequest();
@@ -93,49 +62,55 @@ public class MovieService {
         return webTarget.request(MediaType.APPLICATION_JSON).get();
     }
 
-    private Response.ResponseBuilder buildResponse(Response.ResponseBuilder responseBuilder, Response response) {
-        if (response.hasEntity()) {
-            JsonNode json = response.readEntity(JsonNode.class);
+    private <T> Response.ResponseBuilder buildResponse(Response response, T type) throws JsonProcessingException {
+        Response.ResponseBuilder responseBuilder = null;
+
+        if (response.hasEntity() && response.getStatus() == Response.Status.OK.getStatusCode()) {
+            response.bufferEntity();
+            JsonNode json = response.readEntity(ObjectNode.class).remove("Search");
             if (json.has("Error")) {
                 //Wrap error message given by public API in our response
-                responseBuilder = APIResponseUtils.serverError(json.get("Error").asText());
+                return APIResponseUtils.serverError(json.get("Error").asText());
             } else {
-                String jsonString = json.toString();
-                List<Movie> movies = fromJSON(new TypeReference<List<Movie>>() {
-                }, jsonString);
+                ObjectMapper mapper = new ObjectMapper();
+                List<Movie> movies = mapper.readValue(json.toString(), new TypeReference<List<Movie>>() {
+                });
                 responseBuilder = APIResponseUtils.okWithContent(movies);
             }
-        }
-        if (!response.hasEntity() && (response.getStatus() == Response.Status.OK.getStatusCode())) {
-            responseBuilder = APIResponseUtils.okWithContent("{}");
+        } else {
+            if (response.getStatus() == Response.Status.OK.getStatusCode()) {
+                responseBuilder = APIResponseUtils.okWithContent("{}");
+            } else {
+                responseBuilder = APIResponseUtils.otherStatus("Unknown server error", Response.Status.fromStatusCode(response.getStatus()));
+            }
         }
         return responseBuilder;
     }
 
-    private URI buildQueryFilters(MovieAPIRequest movieAPIRequest, boolean isList) {
+        private URI buildQueryFilters (MovieAPIRequest movieAPIRequest,boolean isList){
 
-        UriBuilder uriBuilder = UriBuilder.fromUri(baseUrl);
-        uriBuilder.queryParam("apikey", apiKey);
+            UriBuilder uriBuilder = UriBuilder.fromUri(baseUrl);
+            uriBuilder.queryParam("apikey", apiKey);
 
-        if (movieAPIRequest.getMovieTitle() != null) {
-            if (isList) {
-                uriBuilder.queryParam("s", movieAPIRequest.getMovieTitle());
-            } else {
-                uriBuilder.queryParam("t", movieAPIRequest.getMovieTitle());
+            if (movieAPIRequest.getMovieTitle() != null) {
+                if (isList) {
+                    uriBuilder.queryParam("s", movieAPIRequest.getMovieTitle());
+                } else {
+                    uriBuilder.queryParam("t", movieAPIRequest.getMovieTitle());
+                }
             }
+            if (movieAPIRequest.getId() != null) {
+                uriBuilder.queryParam("i", movieAPIRequest.getId());
+            }
+            if (movieAPIRequest.getYear() != null) {
+                uriBuilder.queryParam("y", movieAPIRequest.getYear());
+            }
+            if (movieAPIRequest.getPage() != 0) {
+                uriBuilder.queryParam("page", movieAPIRequest.getPage());
+            }
+            if (movieAPIRequest.getFilterType() != null) {
+                uriBuilder.queryParam("filterType", movieAPIRequest.getFilterType());
+            }
+            return uriBuilder.build(movieAPIRequest.getMovieTitle(), movieAPIRequest.getPage());
         }
-        if (movieAPIRequest.getId() != null) {
-            uriBuilder.queryParam("i", movieAPIRequest.getId());
-        }
-        if (movieAPIRequest.getYear() != null) {
-            uriBuilder.queryParam("y", movieAPIRequest.getYear());
-        }
-        if (movieAPIRequest.getPage() != 0) {
-            uriBuilder.queryParam("page", movieAPIRequest.getPage());
-        }
-        if (movieAPIRequest.getFilterType() != null) {
-            uriBuilder.queryParam("filterType", movieAPIRequest.getFilterType());
-        }
-        return uriBuilder.build(movieAPIRequest.getMovieTitle(), movieAPIRequest.getPage());
     }
-}

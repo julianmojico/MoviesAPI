@@ -1,10 +1,12 @@
 package resources;
 
+import ch.qos.logback.core.status.Status;
 import models.APIError;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import java.util.Optional;
 
 public class APIResponseUtils {
 
@@ -16,9 +18,25 @@ public class APIResponseUtils {
         return builder;
     }
 
+    public static ResponseBuilder badRequest(String message) {
+        APIError apiError = new APIError(Response.Status.BAD_REQUEST, "Malformed request", message);
+        Response.ResponseBuilder builder = Response.status(Response.Status.BAD_REQUEST)
+                .entity(apiError)
+                .type(MediaType.APPLICATION_JSON);
+        return builder;
+    }
+
     public static ResponseBuilder serverError(String errorMessage) {
         APIError apiError = new APIError(Response.Status.INTERNAL_SERVER_ERROR, "Internal Server Error", errorMessage);
         Response.ResponseBuilder builder = Response.status(Response.Status.INTERNAL_SERVER_ERROR)
+                .entity(apiError)
+                .type(MediaType.APPLICATION_JSON);
+        return builder;
+    }
+
+    public static ResponseBuilder otherStatus(String message, Response.Status status) {
+        APIError apiError = new APIError(status, message, "");
+        Response.ResponseBuilder builder = Response.status(status)
                 .entity(apiError)
                 .type(MediaType.APPLICATION_JSON);
         return builder;
