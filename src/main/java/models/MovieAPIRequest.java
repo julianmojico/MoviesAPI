@@ -47,11 +47,6 @@ public class MovieAPIRequest {
         return page;
     }
 
-    @Override
-    public int hashCode(){
-        return Objects.hash(id,movieTitle,filterType,year,page);
-    }
-
     public boolean isNullRequest() {
         return ((id == null)
                 && (movieTitle == null)
@@ -62,5 +57,38 @@ public class MovieAPIRequest {
 
     public boolean includeDetails() {
         return includeDetails;
+    }
+
+    @Override
+    public boolean equals(Object o){
+        // If the object is compared with itself then return true
+        if (o == this) {
+            return true;
+        }
+
+        /* Check if o is an instance of Complex or not
+          "null instanceof [type]" also returns false */
+        if (!(o instanceof MovieAPIRequest)) {
+            return false;
+        }
+
+        MovieAPIRequest m = (MovieAPIRequest) o;
+
+        return Objects.equals(this.id,m.id)
+                && Objects.equals(this.movieTitle,m.movieTitle)
+                && this.includeDetails == m.includeDetails
+                && this.page == m.page
+                && Objects.equals(this.filterType,m.filterType);
+    }
+
+    @Override
+    public int hashCode(){
+        int result = 17;
+        result = 31 * result + (id!=null?id.hashCode():0);
+        result = 31 * result + (movieTitle!=null?movieTitle.hashCode():0);
+        result = 31 * result + (includeDetails==true?1:0);
+        result = 31 * result + page;
+        result = 31 * result + (filterType!=null?filterType.hashCode():0);
+        return result;
     }
 }

@@ -1,13 +1,10 @@
 package models;
 
-import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Movie {
-
-
-    //TODO: Set the @Lenght limit ,nullables, etc.
 
     private String title;
     private String year;

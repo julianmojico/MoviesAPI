@@ -8,9 +8,6 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MovieDetails {
 
-
-    //TODO: Set the @Lenght limit ,nullables, etc.
-
     private String title;
     private String year;
     private String rated;

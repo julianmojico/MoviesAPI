@@ -26,9 +26,6 @@ public class OMDBMovieService {
     private String baseUrl;
     private Client client;
 
-    //TODO: CacheService injection + GenericCache implemented by CacheService
-    //private Ehcache<MovieAPIRequest, Movie> cache;
-
 
     public OMDBMovieService(String apiKey, String baseUrl) {
         this.apiKey = apiKey;
