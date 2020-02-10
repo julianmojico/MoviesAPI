@@ -6,7 +6,7 @@ import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import resources.MovieController;
-import service.MovieService;
+import service.OMDBMovieService;
 
 import javax.ws.rs.client.Client;
 
@@ -38,7 +38,7 @@ public class APIApplication extends Application<MoviesAPIConfiguration> {
                     .build(getName());
 
             //Service instantiation
-            MovieService movieService = new MovieService(apiKey,baseUrl);
+            OMDBMovieService movieService = new OMDBMovieService(apiKey,baseUrl);
 
             //Service injection
             environment.jersey().register(new MovieController(movieService));

@@ -1,6 +1,7 @@
 package models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import javax.validation.constraints.NotEmpty;
@@ -16,15 +17,14 @@ public class MovieAPIRequest {
     private FilterType filterType;
     private String year;
     private int page = 1;
-    private boolean isValidRequest = false;
+    private boolean includeDetails = false;
 
     public MovieAPIRequest() {
-
     }
 
     public MovieAPIRequest(String id) {
         this.id = id;
-        isValidRequest = true;
+        this.includeDetails = true;
     }
 
     public String getId() {
@@ -60,5 +60,7 @@ public class MovieAPIRequest {
                 && (year == null));
     }
 
-
+    public boolean includeDetails() {
+        return includeDetails;
+    }
 }

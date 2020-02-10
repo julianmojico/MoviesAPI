@@ -4,10 +4,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import models.Movie;
 import models.MovieAPIRequest;
-import org.ehcache.core.Ehcache;
+import models.MovieDetails;
 import resources.APIResponseUtils;
 
 import javax.inject.Singleton;
@@ -18,19 +17,20 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
-public class MovieService {
+public class OMDBMovieService {
 
     private String apiKey;
     private String baseUrl;
     private Client client;
-    private Ehcache<MovieAPIRequest, Movie> cache;
+
+    //TODO: CacheService injection + GenericCache implemented by CacheService
+    //private Ehcache<MovieAPIRequest, Movie> cache;
 
 
-    public MovieService(String apiKey, String baseUrl) {
+    public OMDBMovieService(String apiKey, String baseUrl) {
         this.apiKey = apiKey;
         this.baseUrl = baseUrl;
         this.client = ClientBuilder.newClient();
@@ -43,39 +43,39 @@ public class MovieService {
         Response.ResponseBuilder responseBuilder = null;
 
         if (!request.isNullRequest()) {
-
             //Perform public API call
-            Response response = callPublicAPI(request, retrieveList);
-            List<Movie> a = new ArrayList<>();
-            responseBuilder = buildResponse(response, a);
+            Response response = callPublicAPI(request);
+            responseBuilder = buildResponse(response, request.includeDetails());
 
         } else {
-            responseBuilder = APIResponseUtils.badRequest();
+            responseBuilder = APIResponseUtils.okWithContent("{}");
         }
         return responseBuilder;
 
     }
 
-    private Response callPublicAPI(MovieAPIRequest request, boolean retrieveList) {
-        URI uri = buildQueryFilters(request, retrieveList);
+    private Response callPublicAPI(MovieAPIRequest request) {
+        URI uri = buildQueryFilters(request);
         WebTarget webTarget = client.target(uri);
         return webTarget.request(MediaType.APPLICATION_JSON).get();
     }
 
-    private <T> Response.ResponseBuilder buildResponse(Response response, T type) throws JsonProcessingException {
-        Response.ResponseBuilder responseBuilder = null;
-
+    private Response.ResponseBuilder buildResponse(Response response, boolean isDetailed) throws JsonProcessingException {
+        Response.ResponseBuilder responseBuilder;
+        response.bufferEntity();
         if (response.hasEntity() && response.getStatus() == Response.Status.OK.getStatusCode()) {
-            response.bufferEntity();
-            JsonNode json = response.readEntity(ObjectNode.class).remove("Search");
+            JsonNode json = response.readEntity(JsonNode.class);
             if (json.has("Error")) {
                 //Wrap error message given by public API in our response
                 return APIResponseUtils.serverError(json.get("Error").asText());
             } else {
-                ObjectMapper mapper = new ObjectMapper();
-                List<Movie> movies = mapper.readValue(json.toString(), new TypeReference<List<Movie>>() {
-                });
-                responseBuilder = APIResponseUtils.okWithContent(movies);
+                Object body;
+                if (isDetailed) {
+                    body = mapMovieDetail(json);
+                } else {
+                    body = mapMovies(json);
+                }
+                responseBuilder = APIResponseUtils.okWithContent(body);
             }
         } else {
             if (response.getStatus() == Response.Status.OK.getStatusCode()) {
@@ -87,17 +87,39 @@ public class MovieService {
         return responseBuilder;
     }
 
-        private URI buildQueryFilters (MovieAPIRequest movieAPIRequest,boolean isList){
+    private static MovieDetails mapMovieDetail(JsonNode json) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json.toString(), new TypeReference<MovieDetails>() {
+        });
+    }
 
-            UriBuilder uriBuilder = UriBuilder.fromUri(baseUrl);
-            uriBuilder.queryParam("apikey", apiKey);
+    private static List<Movie> mapMovies(JsonNode json) throws JsonProcessingException {
+        json = json.findValue("Search");
+        //TODO: if json is not list [] then map a single Movie and add the [] to the response
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json.toString(), new TypeReference<List<Movie>>() {
+        });
+    }
 
+    private static MovieDetails mapMovie(JsonNode json) throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.readValue(json.toString(), new TypeReference<MovieDetails>() {
+        });
+    }
+
+    private URI buildQueryFilters(MovieAPIRequest movieAPIRequest) {
+
+        UriBuilder uriBuilder = UriBuilder.fromUri(baseUrl);
+        uriBuilder.queryParam("apikey", apiKey);
+
+        if (movieAPIRequest.includeDetails()){
+            //if details were requested then just ID is needed since it´´ not considered a search request
+            uriBuilder.queryParam("i", movieAPIRequest.getId());
+        } else {
+
+            //search request parameters mapping to query params
             if (movieAPIRequest.getMovieTitle() != null) {
-                if (isList) {
-                    uriBuilder.queryParam("s", movieAPIRequest.getMovieTitle());
-                } else {
-                    uriBuilder.queryParam("t", movieAPIRequest.getMovieTitle());
-                }
+                uriBuilder.queryParam("s", movieAPIRequest.getMovieTitle());
             }
             if (movieAPIRequest.getId() != null) {
                 uriBuilder.queryParam("i", movieAPIRequest.getId());
@@ -111,6 +133,7 @@ public class MovieService {
             if (movieAPIRequest.getFilterType() != null) {
                 uriBuilder.queryParam("filterType", movieAPIRequest.getFilterType());
             }
-            return uriBuilder.build(movieAPIRequest.getMovieTitle(), movieAPIRequest.getPage());
         }
+        return uriBuilder.build(movieAPIRequest.getMovieTitle(), movieAPIRequest.getPage());
     }
+}
