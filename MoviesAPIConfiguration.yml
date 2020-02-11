@@ -1,1 +1,63 @@
 appName: MoviesAPI
+environment: development
+apiKey: 938c5ab4
+baseUrl: http://www.omdbapi.com/
+
+server:
+
+  type: default
+  #allowedMethods: [GET,HEAD,OPTIONS]
+  allowedMethods:
+    - GET
+    - PUT
+    - DELETE
+    - HEAD
+    - OPTIONS
+    - PATCH
+    - PROPFIND
+  adminContextPath: /
+  applicationContextPath: /
+  gzip:
+    enabled: true
+    bufferSize: 8KiB
+  applicationConnectors:
+    - type: http
+      port: 8080
+      bindHost: 127.0.0.1 # only bind to loopback
+      inheritChannel: false
+      headerCacheSize: 512 bytes
+      outputBufferSize: 32KiB
+      maxRequestHeaderSize: 8KiB
+      maxResponseHeaderSize: 8KiB
+      inputBufferSize: 8KiB
+      idleTimeout: 30 seconds
+      minBufferPoolSize: 64 bytes
+      bufferPoolIncrement: 1KiB
+      maxBufferPoolSize: 64KiB
+      minRequestDataPerSecond: '0 bytes'
+      minResponseDataPerSecond: '0 bytes'
+      acceptorThreads: 1
+      selectorThreads: 2
+      acceptQueueSize: 1024
+      reuseAddress: true
+      useServerHeader: false
+      useDateHeader: true
+      useForwardedHeaders: false
+      httpCompliance: RFC7230
+
+logging:
+  level: INFO
+  appenders:
+
+    - type: file
+      currentLogFilename: .myapplication.log
+      threshold: ALL
+      queueSize: 512
+      discardingThreshold: 0
+      archive: true
+      archivedLogFilenamePattern: .myapplication-%d.log
+      archivedFileCount: 5
+      timeZone: UTC
+      logFormat: "%-5p [%d{ISO8601,UTC}] %c: %m%n%rEx"
+      bufferSize: 8KiB
+      immediateFlush: true

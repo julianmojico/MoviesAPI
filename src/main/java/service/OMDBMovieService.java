@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import models.Movie;
 import models.MovieAPIRequest;
 import models.MovieDetails;
 import resources.APIResponseUtils;
@@ -17,6 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 
 @Singleton
@@ -69,7 +69,7 @@ public class OMDBMovieService {
                 if (isDetailed) {
                     body = mapMovieDetail(json);
                 } else {
-                    body = mapMovies(json);
+                    body = mapMovieList(json);
                 }
                 responseBuilder = APIResponseUtils.okWithContent(body);
             }
@@ -89,18 +89,11 @@ public class OMDBMovieService {
         });
     }
 
-    private static List<Movie> mapMovies(JsonNode json) throws JsonProcessingException {
+    private static List mapMovieList(JsonNode json) throws JsonProcessingException {
         json = json.findValue("Search");
         //TODO: if json is not list [] then map a single Movie and add the [] to the response
         ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(json.toString(), new TypeReference<List<Movie>>() {
-        });
-    }
-
-    private static MovieDetails mapMovie(JsonNode json) throws JsonProcessingException {
-        ObjectMapper mapper = new ObjectMapper();
-        return mapper.readValue(json.toString(), new TypeReference<MovieDetails>() {
-        });
+        return mapper.readValue(json.toString(), ArrayList.class);
     }
 
     private URI buildQueryFilters(MovieAPIRequest movieAPIRequest) {

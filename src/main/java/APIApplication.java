@@ -1,72 +1,59 @@
 import configurations.MoviesAPIConfiguration;
-import health.TemplateHealthCheck;
+import health.APIHealthCheck;
 import io.dropwizard.Application;
-import io.dropwizard.client.JerseyClientBuilder;
-import io.dropwizard.client.JerseyClientConfiguration;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import models.MovieAPIRequest;
 import models.MovieDetails;
-import models.MovieList;
 import org.ehcache.Cache;
 import resources.MovieController;
-import service.EhCacheInitializer;
-import service.GenericCacheService;
+import service.EhCacheManager;
 import service.MoviesCacheService;
 import service.OMDBMovieService;
 
-import javax.ws.rs.client.Client;
+import java.time.Duration;
 import java.util.ArrayList;
-import java.util.List;
 
 public class APIApplication extends Application<MoviesAPIConfiguration> {
-
-    private final String apiKey = System.getProperty("apiKey");
-    private final String baseUrl = System.getProperty("baseUrl");
 
     public static void main(String[] args) throws Exception {
         new APIApplication().run(args);
     }
 
     @Override
-    public String getName() {
-        return "MoviesAPI";
-    }
-
-    @Override
     public void initialize(Bootstrap<MoviesAPIConfiguration> bootstrap) {
-        // nothing to do yet
     }
 
     @Override
     public void run(MoviesAPIConfiguration moviesAPIConfiguration, Environment environment) {
 
-        if (!(baseUrl == null || apiKey == null)) {
-            //JerseyClient initialization
+        String baseUrl = moviesAPIConfiguration.getBaseUrl();
+        String apiKey = moviesAPIConfiguration.getApiKey();
 
-            //OMDB public API service instantiation
-            OMDBMovieService movieService = new OMDBMovieService(apiKey,baseUrl);
+        //OMDB public API service instantiation
+        OMDBMovieService movieService = new OMDBMovieService(apiKey, baseUrl);
 
-            //Cache service instantiation
-            EhCacheInitializer cacheInitializer = new EhCacheInitializer();
+        //Cache service instantiation
+        EhCacheManager cacheInitializer = new EhCacheManager();
 
-            //MovieList cache instantiation
-            Cache<MovieAPIRequest,MovieList> movieListCache = cacheInitializer.createCache("movieListCache", MovieAPIRequest.class, MovieList.class,1000);
-            MoviesCacheService moviesCacheService = new MoviesCacheService(movieListCache);
+        //Let dropwizard handle cache´s lifecycle
+        environment.lifecycle().manage(cacheInitializer);
 
-            //MovieDetails cache instantiation
-            Cache<MovieAPIRequest,MovieDetails> movieDetailsCache = cacheInitializer.createCache("movieDetailsCache", MovieAPIRequest.class, MovieDetails.class,1000);
-            MoviesCacheService movieDetailsCacheService = new MoviesCacheService(movieDetailsCache);
+        //MovieList cache instantiation
+        Cache<MovieAPIRequest, ArrayList> movieListCache = cacheInitializer.createCache("movieListCache", MovieAPIRequest.class, ArrayList.class, 5000, Duration.ofDays(30L));
+        MoviesCacheService moviesCacheService = new MoviesCacheService(movieListCache);
 
-            //Services injection
-            environment.jersey().register(new MovieController(movieService,moviesCacheService,movieDetailsCacheService));
+        //MovieDetails cache instantiation
+        Cache<MovieAPIRequest, MovieDetails> movieDetailsCache = cacheInitializer.createCache("movieDetailsCache", MovieAPIRequest.class, MovieDetails.class, 5000, Duration.ofDays(30L));
+        MoviesCacheService movieDetailsCacheService = new MoviesCacheService(movieDetailsCache);
 
-            final TemplateHealthCheck healthCheck =
-                    new TemplateHealthCheck(moviesAPIConfiguration.getAppName());
-            environment.healthChecks().register("appHealthcheck", healthCheck);
-        } else {
-            throw new RuntimeException("baseApiUrl and apiKey are required parameters needed by the JVM");
-        }
+        //Services injection
+        environment.jersey().register(new MovieController(movieService, moviesCacheService, movieDetailsCacheService));
+
+        //Healthcheck
+        String appName = moviesAPIConfiguration.getAppName();
+        final APIHealthCheck healthCheck = new APIHealthCheck(appName);
+        environment.healthChecks().register(appName, healthCheck);
 
     }
 }
