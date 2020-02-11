@@ -1,29 +1,28 @@
 package resources;
 
 import com.codahale.metrics.annotation.Timed;
-import jdk.nashorn.api.scripting.ScriptObjectMirror;
 import models.MovieAPIRequest;
 import models.MovieDetails;
+import models.MovieList;
 import service.GenericCacheService;
 import service.OMDBMovieService;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Optional;
 
 @Path("/api")
 @Produces(MediaType.APPLICATION_JSON)
 public class MovieController {
 
     private OMDBMovieService movieService;
-    private GenericCacheService moviesCache;
-    private GenericCacheService movieDetailsCache;
+    private GenericCacheService<MovieAPIRequest,MovieList> moviesCache;
+    private GenericCacheService<MovieAPIRequest,MovieDetails> detailsCache;
 
-    public MovieController(OMDBMovieService movieService, GenericCacheService moviesCache, GenericCacheService movieDetailsCache) {
+    public MovieController(OMDBMovieService movieService, GenericCacheService moviesCache, GenericCacheService detailsCache) {
         this.movieService = movieService;
         this.moviesCache = moviesCache;
-        this.movieDetailsCache = movieDetailsCache;
+        this.detailsCache = detailsCache;
     }
 
     @Path("/movie/{id}")
@@ -36,16 +35,7 @@ public class MovieController {
         if (id == null || id.isEmpty()) {
             return Response.status(Response.Status.BAD_REQUEST.getStatusCode(), "At least one of the parameters id,title,year must exist").build();
         } else {
-            MovieDetails cachedObject = (MovieDetails) this.movieDetailsCache.find(request);
-            if (cachedObject != null) {
-                return APIResponseUtils.okWithContent(cachedObject).build();
-            } else {
-                Response response = callMovieService(request);
-                response.bufferEntity();
-                MovieDetails details = (MovieDetails) response.getEntity();
-                this.movieDetailsCache.save(request, details);
-                return response;
-            }
+            return safeServiceRequest(request,detailsCache);
         }
     }
 
@@ -54,22 +44,22 @@ public class MovieController {
     @Consumes(MediaType.APPLICATION_JSON)
     @Timed
     public Response getMovies(MovieAPIRequest request) {
-        return callMovieService(request);
+        return safeServiceRequest(request, moviesCache);
     }
 
-    private Response callMovieService(MovieAPIRequest request) {
+
+    private Response safeServiceRequest(MovieAPIRequest request, GenericCacheService cache) {
         Response.ResponseBuilder response;
         try {
-            response = movieService.fetchMovies(request);
-            return response.build();
-        } catch (Exception e) {
-            String errorMessage;
-            if (e.getMessage() != null) {
-                errorMessage = e.getMessage();
+            Object cachedObject = cache.find(request);
+            if (cachedObject != null) {
+                return APIResponseUtils.okWithContent(cachedObject).build();
             } else {
-                errorMessage = "There was an error in the server while processing the request";
+                response = movieService.fetchMovies(request);
+                return response.build();
             }
-            return APIResponseUtils.serverError(errorMessage).build();
+        } catch (Exception e) {
+            return APIResponseUtils.serverError(e);
         }
     }
 }

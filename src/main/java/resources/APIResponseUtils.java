@@ -66,4 +66,14 @@ public class APIResponseUtils {
                 .type(MediaType.APPLICATION_JSON);
         return builder;
     }
+
+    public static Response serverError(Exception e) {
+        String errorMessage;
+        if (e.getMessage() != null) {
+            errorMessage = e.getMessage();
+        } else {
+            errorMessage = "There was an error in the server while processing the request";
+        }
+        return APIResponseUtils.serverError(errorMessage).build();
+    }
 }

@@ -1,5 +1,6 @@
 package service;
 
+import org.checkerframework.checker.units.qual.K;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.config.builders.CacheConfigurationBuilder;
@@ -21,7 +22,7 @@ public class EhCacheInitializer {
         cacheManager.init();
     }
 
-    public <K, V> Cache createCache(String name, Class<K> keyClass, Class<V> valueClass, int heapSize) {
+    public <K,V> Cache<K,V> createCache(String name, Class<K> keyClass, Class<V> valueClass, int heapSize) {
 
         CacheConfigurationBuilder config = CacheConfigurationBuilder.newCacheConfigurationBuilder(keyClass, valueClass, ResourcePoolsBuilder.heap(heapSize));
         Cache<K, V> myCache = cacheManager.createCache(name, config);

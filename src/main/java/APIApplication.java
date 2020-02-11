@@ -55,7 +55,7 @@ public class APIApplication extends Application<MoviesAPIConfiguration> {
             MoviesCacheService moviesCacheService = new MoviesCacheService(movieListCache);
 
             //MovieDetails cache instantiation
-            Cache<MovieAPIRequest,MovieList> movieDetailsCache = cacheInitializer.createCache("movieDetailsCache", MovieAPIRequest.class, MovieDetails.class,1000);
+            Cache<MovieAPIRequest,MovieDetails> movieDetailsCache = cacheInitializer.createCache("movieDetailsCache", MovieAPIRequest.class, MovieDetails.class,1000);
             MoviesCacheService movieDetailsCacheService = new MoviesCacheService(movieDetailsCache);
 
             //Services injection

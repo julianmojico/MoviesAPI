@@ -36,8 +36,7 @@ public class OMDBMovieService {
 
     public Response.ResponseBuilder fetchMovies(MovieAPIRequest request) throws Exception {
 
-        boolean retrieveList = true;
-        Response.ResponseBuilder responseBuilder = null;
+        Response.ResponseBuilder responseBuilder;
 
         if (!request.isNullRequest()) {
             //Perform public API call
