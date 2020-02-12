@@ -51,9 +51,9 @@ public class APIResponseUtils {
     }
 
     public static ResponseBuilder notFound(){
-        //Content must be serializable
+        APIError apiError = new APIError(Response.Status.NOT_FOUND, "Resource Not Found", "");
         Response.ResponseBuilder builder = Response.status(Response.Status.NOT_FOUND)
-                .entity("{}")
+                .entity(apiError)
                 .type(MediaType.APPLICATION_JSON);
         return builder;
     }

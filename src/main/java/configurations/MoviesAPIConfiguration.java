@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.Configuration;
 
 import javax.validation.constraints.NotEmpty;
+import java.util.LinkedHashMap;
 
 public class MoviesAPIConfiguration extends Configuration {
 
@@ -19,6 +20,8 @@ public class MoviesAPIConfiguration extends Configuration {
 
     @NotEmpty
     private String environment;
+
+    private LinkedHashMap<String, String> server;
 
     @JsonProperty
     public String getAppName() {
@@ -58,5 +61,15 @@ public class MoviesAPIConfiguration extends Configuration {
     @JsonProperty
     public void setEnvironment(String environment) {
         this.environment = environment;
+    }
+
+    @JsonProperty
+    public LinkedHashMap getServer() {
+        return server;
+    }
+
+    @JsonProperty
+    public void setServer(LinkedHashMap server) {
+        this.server = server;
     }
 }

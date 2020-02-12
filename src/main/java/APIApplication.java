@@ -1,4 +1,7 @@
+import exceptions.EntityNotFoundMapper;
 import configurations.MoviesAPIConfiguration;
+import exceptions.GeneralErrorMapper;
+import exceptions.MethodNotAllowedMapper;
 import health.APIHealthCheck;
 import io.dropwizard.Application;
 import io.dropwizard.setup.Bootstrap;
@@ -12,7 +15,7 @@ import service.MoviesCacheService;
 import service.OMDBMovieService;
 
 import java.time.Duration;
-import java.util.ArrayList;
+import java.util.*;
 
 public class APIApplication extends Application<MoviesAPIConfiguration> {
 
@@ -49,6 +52,11 @@ public class APIApplication extends Application<MoviesAPIConfiguration> {
 
         //Services injection
         environment.jersey().register(new MovieController(movieService, moviesCacheService, movieDetailsCacheService));
+
+        //Customized exception mappers
+        environment.jersey().register(EntityNotFoundMapper.class);
+        environment.jersey().register(MethodNotAllowedMapper.class);
+        environment.jersey().register(GeneralErrorMapper.class);
 
         //Healthcheck
         String appName = moviesAPIConfiguration.getAppName();

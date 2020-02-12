@@ -3,18 +3,18 @@ environment: development
 apiKey: 938c5ab4
 baseUrl: http://www.omdbapi.com/
 
+admin:
+  tasks:
+    printStackTraceOnError: true
+
 server:
 
   type: default
   #allowedMethods: [GET,HEAD,OPTIONS]
   allowedMethods:
     - GET
-    - PUT
-    - DELETE
-    - HEAD
     - OPTIONS
-    - PATCH
-    - PROPFIND
+  #rootPath: /api
   adminContextPath: /
   applicationContextPath: /
   gzip:
@@ -46,7 +46,7 @@ server:
       httpCompliance: RFC7230
 
 logging:
-  level: INFO
+  level: DEBUG
   appenders:
 
     - type: file
