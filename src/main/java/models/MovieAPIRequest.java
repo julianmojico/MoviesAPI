@@ -1,7 +1,6 @@
 package models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import javax.validation.constraints.NotEmpty;
@@ -14,7 +13,7 @@ public class MovieAPIRequest {
     @NotEmpty
     private String id;
     private String movieTitle;
-    private FilterType filterType;
+    private FilterType type;
     private String year;
     private int page = 1;
     private boolean includeDetails = false;
@@ -35,8 +34,8 @@ public class MovieAPIRequest {
         return movieTitle;
     }
 
-    public FilterType getFilterType() {
-        return filterType;
+    public FilterType getType() {
+        return type;
     }
 
     public String getYear() {
@@ -51,7 +50,7 @@ public class MovieAPIRequest {
         return ((id == null)
                 && (movieTitle == null)
                 && (movieTitle == null)
-                && (filterType == null)
+                && (type == null)
                 && (year == null));
     }
 
@@ -78,7 +77,7 @@ public class MovieAPIRequest {
                 && Objects.equals(this.movieTitle,m.movieTitle)
                 && this.includeDetails == m.includeDetails
                 && this.page == m.page
-                && Objects.equals(this.filterType,m.filterType);
+                && Objects.equals(this.type,m.type);
     }
 
     @Override
@@ -88,7 +87,7 @@ public class MovieAPIRequest {
         result = 31 * result + (movieTitle!=null?movieTitle.hashCode():0);
         result = 31 * result + (includeDetails==true?1:0);
         result = 31 * result + page;
-        result = 31 * result + (filterType!=null?filterType.hashCode():0);
+        result = 31 * result + (type !=null? type.hashCode():0);
         return result;
     }
 }

@@ -119,8 +119,8 @@ public class OMDBMovieService {
             if (movieAPIRequest.getPage() != 0) {
                 uriBuilder.queryParam("page", movieAPIRequest.getPage());
             }
-            if (movieAPIRequest.getFilterType() != null) {
-                uriBuilder.queryParam("filterType", movieAPIRequest.getFilterType());
+            if (movieAPIRequest.getType() != null) {
+                uriBuilder.queryParam("type", movieAPIRequest.getType());
             }
         }
         return uriBuilder.build(movieAPIRequest.getMovieTitle(), movieAPIRequest.getPage());
