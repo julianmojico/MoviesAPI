@@ -21,6 +21,7 @@ public class MoviesAPIConfiguration extends Configuration {
     @NotEmpty
     private String environment;
 
+    @NotEmpty
     private LinkedHashMap<String, String> server;
 
     @JsonProperty

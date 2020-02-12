@@ -50,12 +50,12 @@ logging:
   appenders:
 
     - type: file
-      currentLogFilename: .myapplication.log
+      currentLogFilename: .movies-api.log
       threshold: ALL
       queueSize: 512
       discardingThreshold: 0
       archive: true
-      archivedLogFilenamePattern: .myapplication-%d.log
+      archivedLogFilenamePattern: .movies-api-%d.log
       archivedFileCount: 5
       timeZone: UTC
       logFormat: "%-5p [%d{ISO8601,UTC}] %c: %m%n%rEx"
