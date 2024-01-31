@@ -1,0 +1,84 @@
+repo_name: julianmojico/MoviesAPI
+report_id: a15c83ffacc06bd82368e447f2426f79
+version: 0.1
+repo_type: Public
+timestamp: '2024-01-31T08:55:58+00:00'
+requested_by: julianmojico
+provider: github
+branch: master
+detected_tools_count: 6
+tools:
+- name: Java
+  description: A concurrent, class-based, object-oriented, language specifically designed
+    to have as few implementation dependencies as possible
+  website_url: https://www.java.com
+  open_source: true
+  hosted_saas: false
+  category: Languages & Frameworks
+  sub_category: Languages
+  image_url: https://img.stackshare.io/service/995/K85ZWV2F.png
+  detection_source_url: https://github.com/julianmojico/MoviesAPI
+  detection_source: Repo Metadata
+- name: Ehcache
+  description: Java's Most Widely-Used Cache
+  website_url: http://ehcache.org/
+  version: 3.8.1
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Data Stores
+  sub_category: Cache
+  image_url: https://img.stackshare.io/service/3093/EhcacheTwitterIcon.png
+  detection_source_url: https://github.com/julianmojico/MoviesAPI/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Julian Mojico
+  last_updated_on: 2020-02-08 21:04:38.000000000 Z
+- name: Git
+  description: Fast, scalable, distributed revision control system
+  website_url: http://git-scm.com/
+  open_source: true
+  hosted_saas: false
+  category: Build, Test, Deploy
+  sub_category: Version Control System
+  image_url: https://img.stackshare.io/service/1046/git.png
+  detection_source_url: https://github.com/julianmojico/MoviesAPI
+  detection_source: Repo Metadata
+- name: io.dropwizard:dropwizard-client
+  description: Dropwizard is a Java framework for developing ops-friendly
+  version: 2.0.0
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Maven Packages
+  image_url: https://img.stackshare.io/package/maven/image.png
+  detection_source_url: https://github.com/julianmojico/MoviesAPI/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Julian Mojico
+  last_updated_on: 2020-02-08 21:04:38.000000000 Z
+- name: io.dropwizard:dropwizard-core
+  description: Dropwizard is a Java framework for developing ops-friendly
+  version: 2.0.0
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Maven Packages
+  image_url: https://img.stackshare.io/package/maven/image.png
+  detection_source_url: https://github.com/julianmojico/MoviesAPI/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Julian Mojico
+  last_updated_on: 2020-02-08 21:04:38.000000000 Z
+- name: org.ehcache:ehcache
+  description: Ehcache single jar, containing all modules
+  version: 3.8.1
+  license: Apache-2.0
+  open_source: true
+  hosted_saas: false
+  category: Libraries
+  sub_category: Maven Packages
+  image_url: https://img.stackshare.io/package/maven/image.png
+  detection_source_url: https://github.com/julianmojico/MoviesAPI/blob/master/pom.xml
+  detection_source: pom.xml
+  last_updated_by: Julian Mojico
+  last_updated_on: 2020-02-08 21:04:38.000000000 Z
